@@ -6,34 +6,114 @@ import { Bar } from 'vue-chartjs'
 // Registrar os módulos do Chart.js
 ChartJS.register(Title, Tooltip, Legend, BarElement, CategoryScale, LinearScale)
 
+// Importar dados das ONGs
+const ongs = [
+  // CRIANÇAS
+  { id: 'lar-abdon-batista', categoria: 'criancas', title: 'Lar Abdon Batista', doações: 320 },
+  { id: 'omunga', categoria: 'criancas', title: 'OMUNGA', doações: 285 },
+  { id: 'missao-crianca-jardim-paraiso', categoria: 'criancas', title: 'Missão Criança', doações: 240 },
+  { id: 'ecos-esperanca', categoria: 'criancas', title: 'Ecos de Esperança', doações: 190 },
+  { id: 'instituto-conforme', categoria: 'criancas', title: 'Instituto Conforme', doações: 165 },
+  { id: 'casa-do-adalto', categoria: 'criancas', title: 'Casa do Adalto', doações: 150 },
+  { id: 'projeto-resgate', categoria: 'criancas', title: 'Projeto Resgate', doações: 125 },
+  { id: 'casa-lar-emanuel', categoria: 'criancas', title: 'Casa Lar Emanuel', doações: 110 },
+  { id: 'instituto-caranguejo', categoria: 'criancas', title: 'Instituto Caranguejo', doações: 95 },
+
+  // IDOSOS
+  { id: 'lar-betania', categoria: 'idosos', title: 'Lar Betânia', doações: 275 },
+  { id: 'ventura-residence', categoria: 'idosos', title: 'Ventura Residencial', doações: 220 },
+  { id: 'lar-renascer', categoria: 'idosos', title: 'Lar Renascer', doações: 195 },
+  { id: 'joao-de-paula', categoria: 'idosos', title: 'Exército da Salvação', doações: 180 },
+  { id: 'lar-aconchego', categoria: 'idosos', title: 'Lar Aconchego', doações: 160 },
+  { id: 'bom-retiro', categoria: 'idosos', title: 'Repouso Bom Retiro', doações: 140 },
+  { id: 'casa-de-repouso-siloé', categoria: 'idosos', title: 'Casa SILOÉ', doações: 130 },
+  { id: 'casa-repouso-acolher', categoria: 'idosos', title: 'Casa Acolher', doações: 115 },
+  { id: 'acao-social-joinville', categoria: 'idosos', title: 'Ação Social JVE', doações: 105 },
+
+  // MORADORES DE RUA
+  { id: 'casa-santo-egidio', categoria: 'moradores-de-rua', title: 'Santo Egídio', doações: 250 },
+  { id: 'casa-vo-joaquina', categoria: 'moradores-de-rua', title: 'Casa Vó Joaquina', doações: 210 },
+  { id: 'crepsr', categoria: 'moradores-de-rua', title: 'Centro Pop', doações: 200 },
+  { id: 'restaurante-herbert', categoria: 'moradores-de-rua', title: 'Rest. Popular 1', doações: 175 },
+  { id: 'restaurante-zilda', categoria: 'moradores-de-rua', title: 'Rest. Popular 2', doações: 170 },
+  { id: 'casa-de-levi', categoria: 'moradores-de-rua', title: 'Eis-me Aqui', doações: 145 },
+  { id: 'sementes-do-futuro', categoria: 'moradores-de-rua', title: 'AACC Sementes', doações: 120 },
+  { id: 'aaprn', categoria: 'moradores-de-rua', title: 'AACC Reabilitação', doações: 100 },
+  { id: 'caps', categoria: 'moradores-de-rua', title: 'CAPS', doações: 85 }
+]
+
 // Estados reativos para os controles
 const chartType = ref('Gráfico')
 const graphType = ref('Gráfico de colunas')
 const timeRange = ref('30 dias')
-const showMoreDonated = ref(true)
-const showLessDonated = ref(true)
+const showCriancas = ref(true)
+const showIdosos = ref(true)
+const showMoradoresRua = ref(true)
 
-// Dados do gráfico (valores mais próximos da imagem)
-const chartData = computed(() => ({
-  labels: ['INSTITUIÇÃO ALMA', 'INSTITUIÇÃO NOVA'],
-  datasets: [
-    {
-      data: [320, 150],
-      backgroundColor: ['#4285F4', '#4285F4'],
-      borderRadius: 0,
-      barThickness: 60,
+// Cores para cada categoria
+const coresCategorias = {
+  'criancas': '#4285F4',
+  'idosos': '#34A853',
+  'moradores-de-rua': '#EA4335'
+}
+
+// Dados computados baseados nos filtros
+const chartData = computed(() => {
+  const labels = []
+  const data = []
+  const cores = []
+
+  ongs.forEach(ong => {
+    let incluir = false
+
+    if (ong.categoria === 'criancas' && showCriancas.value) incluir = true
+    if (ong.categoria === 'idosos' && showIdosos.value) incluir = true
+    if (ong.categoria === 'moradores-de-rua' && showMoradoresRua.value) incluir = true
+
+    if (incluir) {
+      labels.push(ong.title)
+      data.push(ong.doações)
+      cores.push(coresCategorias[ong.categoria])
     }
-  ]
-}))
+  })
 
-// Opções do gráfico para ficar mais próximo da imagem
+  return {
+    labels,
+    datasets: [
+      {
+        label: 'Registros de Doação',
+        data,
+        backgroundColor: cores,
+        borderRadius: 2,
+        barThickness: 25,
+      }
+    ]
+  }
+})
+
+// Estatísticas computadas
+const estatisticas = computed(() => {
+  const ongsVisiveis = ongs.filter(ong => {
+    if (ong.categoria === 'criancas' && showCriancas.value) return true
+    if (ong.categoria === 'idosos' && showIdosos.value) return true
+    if (ong.categoria === 'moradores-de-rua' && showMoradoresRua.value) return true
+    return false
+  })
+
+  const totalDoações = ongsVisiveis.reduce((total, ong) => total + ong.doações, 0)
+  const totalOngs = ongsVisiveis.length
+
+  return { totalDoações, totalOngs }
+})
+
+// Opções do gráfico
 const chartOptions = {
   responsive: true,
   maintainAspectRatio: false,
   layout: {
     padding: {
       top: 20,
-      bottom: 40
+      bottom: 60
     }
   },
   plugins: {
@@ -44,7 +124,12 @@ const chartOptions = {
       enabled: true,
       backgroundColor: 'rgba(0,0,0,0.8)',
       titleColor: '#fff',
-      bodyColor: '#fff'
+      bodyColor: '#fff',
+      callbacks: {
+        label: function(context) {
+          return `${context.parsed.y} doações`
+        }
+      }
     }
   },
   scales: {
@@ -56,11 +141,11 @@ const chartOptions = {
       ticks: {
         display: true,
         font: {
-          size: 11
+          size: 9
         },
         color: '#666',
-        maxRotation: 0,
-        minRotation: 0
+        maxRotation: 45,
+        minRotation: 45
       },
       border: {
         display: false
@@ -69,7 +154,7 @@ const chartOptions = {
     y: {
       display: true,
       beginAtZero: true,
-      max: 400,
+      max: 350,
       ticks: {
         stepSize: 50,
         font: {
@@ -151,23 +236,40 @@ const chartOptions = {
 
         <!-- Conteúdo -->
         <div class="control-group">
-          <label class="control-label">Conteúdo</label>
+          <label class="control-label">Categorias</label>
           <div class="checkbox-group">
             <label class="checkbox-item">
               <input
-                v-model="showMoreDonated"
+                v-model="showCriancas"
                 type="checkbox"
                 class="checkbox-input"
               />
-              <span class="checkbox-label">Orgãos mais doados</span>
+              <span class="checkbox-label">
+                <span class="category-dot criancas"></span>
+                Crianças (9)
+              </span>
             </label>
             <label class="checkbox-item">
               <input
-                v-model="showLessDonated"
+                v-model="showIdosos"
                 type="checkbox"
                 class="checkbox-input"
               />
-              <span class="checkbox-label">Filtros mais doados</span>
+              <span class="checkbox-label">
+                <span class="category-dot idosos"></span>
+                Idosos (9)
+              </span>
+            </label>
+            <label class="checkbox-item">
+              <input
+                v-model="showMoradoresRua"
+                type="checkbox"
+                class="checkbox-input"
+              />
+              <span class="checkbox-label">
+                <span class="category-dot moradores-rua"></span>
+                Moradores de Rua (9)
+              </span>
             </label>
           </div>
         </div>
@@ -178,11 +280,25 @@ const chartOptions = {
           <div class="select-wrapper">
             <select v-model="timeRange" class="control-select">
               <option>30 dias</option>
-              <option>3 meses </option>
+              <option>3 meses</option>
               <option>Ultimo ano</option>
               <option>Todos</option>
             </select>
             <div class="select-arrow">▼</div>
+          </div>
+        </div>
+
+        <!-- Estatísticas -->
+        <div class="control-group">
+          <div class="stats-box">
+            <div class="stat-item">
+              <div class="stat-number">{{ estatisticas.totalOngs }}</div>
+              <div class="stat-label">ONGs Ativas</div>
+            </div>
+            <div class="stat-item">
+              <div class="stat-number">{{ estatisticas.totalDoações.toLocaleString() }}</div>
+              <div class="stat-label">Total Doações</div>
+            </div>
           </div>
         </div>
       </div>
@@ -220,19 +336,19 @@ const chartOptions = {
   background: #fafafa;
   border-radius: 4px;
   padding: 15px;
-  min-height: 350px;
+  min-height: 400px;
 }
 
 .chart-canvas {
-  height: 320px;
+  height: 370px;
   width: 100%;
 }
 
 .controls-panel {
-  width: 200px;
+  width: 220px;
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 18px;
 }
 
 .control-group {
@@ -298,6 +414,56 @@ const chartOptions = {
   font-size: 13px;
   color: #333;
   cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.category-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.category-dot.criancas {
+  background-color: #4285F4;
+}
+
+.category-dot.idosos {
+  background-color: #34A853;
+}
+
+.category-dot.moradores-rua {
+  background-color: #EA4335;
+}
+
+.stats-box {
+  background: #f0f7ff;
+  border: 1px solid #e3f2fd;
+  border-radius: 6px;
+  padding: 12px;
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.stat-item {
+  text-align: center;
+  flex: 1;
+}
+
+.stat-number {
+  font-size: 18px;
+  font-weight: bold;
+  color: #2563EB;
+  line-height: 1.2;
+}
+
+.stat-label {
+  font-size: 10px;
+  color: #666;
+  margin-top: 2px;
 }
 
 .control-select:focus {
